@@ -1,0 +1,23 @@
+[package]
+name = "coordinator"
+version = "0.1.0"
+authors = [""]
+edition = "2018"
+
+[dependencies]
+jsonrpc-core = "12"
+jsonrpc-core-client = "12"
+jsonrpc-tcp-server = "12"
+jsonrpc-derive = "12"
+jsonrpc-pubsub = "12"
+
+tokio = "0.1"
+futures = "0.1"
+
+serde = "1"
+serde_derive = "1"
+serde_yaml = "0.8"
+
+r2d2_postgres = "0.14"
+
+clap = "2"
