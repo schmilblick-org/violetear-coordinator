@@ -1,0 +1,3 @@
+postgres_uri: "postgresql://postgres:mysecretpassword@localhost"
+rpc_listen_port: 6000
+rpc_listen_address: "127.0.0.1"
