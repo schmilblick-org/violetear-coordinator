@@ -37,7 +37,7 @@ pub struct RpcImpl {
 }
 
 impl Rpc for RpcImpl {
-    fn create_profile(&self, base_name: String, name: String, yaml: String) -> Result<ProfileId> {
+    fn create_profile(&self, base_name: String, name: String, json: String) -> Result<ProfileId> {
         Ok(ProfileId(0))
     }
 
@@ -63,7 +63,6 @@ impl Rpc for RpcImpl {
 }
 
 mod config;
-
 use config::Config;
 
 fn main() {
@@ -83,16 +82,44 @@ fn main() {
         serde_yaml::from_reader(std::fs::File::open(config_path).expect("could not open config"))
             .expect("could not parse config");
 
-    let mut io = IoHandler::new();
-
     let db_pool = r2d2::Pool::new(
         PostgresConnectionManager::new(config.postgres_uri, TlsMode::None)
             .expect("could not create PostgresConnectionManager"),
     )
     .expect("could not create r2d2::Pool");
 
+    db_pool
+        .get()
+        .unwrap()
+        .execute(
+            "CREATE TABLE IF NOT EXISTS profiles (
+                id BIGSERIAL PRIMARY KEY NOT NULL,
+                base VARCHAR(255) NOT NULL,
+                name VARCHAR(255) UNIQUE NOT NULL,
+                json JSONB NOT NULL
+            );",
+            &[],
+        )
+        .unwrap();
+
+    db_pool
+        .get()
+        .unwrap()
+        .execute(
+            "CREATE TABLE IF NOT EXISTS tasks (
+                id BIGSERIAL PRIMARY KEY NOT NULL,
+                profile_id BIGSERIAL NOT NULL,
+                file_name TEXT NOT NULL,
+                data BYTEA,
+                hash VARCHAR(255)
+            );",
+            &[],
+        )
+        .unwrap();
+
     let rpc = RpcImpl { db_pool };
 
+    let mut io = IoHandler::new();
     io.extend_with(rpc.to_delegate());
 
     let server = jsonrpc_tcp_server::ServerBuilder::new(io)
